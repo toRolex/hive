@@ -1,20 +1,18 @@
 <!DOCTYPE html>
-<!-- PROTOTYPE（throwaway）· wayfinder ticket #37 · 「Tachikoma 外壳」像素级复刻
+<!-- PROTOTYPE（throwaway）· wayfinder ticket #37 · 「Tachikoma 外壳」像素级复刻 v3
      参考图（唯一视觉真相）：docs/UI-draft/*.png（美术交付的 9 张 Tachikoma 外壳）
      业务行为（唯一行为真相）：wayfinder map #20 的已定 decisions
-     本 variant = B（两段式 Agent 成员）的 Tachikoma 化实现：
-       - 深色主题 + 红色 accent（#e94560）+ 等宽数字
-       - 左栏：Tachikoma logo + 导航 + Channels/Direct messages 两段
-       - agent = 塔奇克马精灵图（AI 徽章 + Active/Idle 药丸）
-       - 群聊消息流：右侧详情面板 = 渠道信息 + Members + Active agents + Pinned
-       - 头部 banner = 频道题图（攻壳城市夜景）
-     约束：#36 词表 / #17 五档色（融入深色主题）/ #34 本机视角 / #29 正式消息 / #30 pending
+     v3 变更：
+       - state 内存面板移除（用户反馈不需要）
+       - 派遣网络图放在 Active agents 卡片顶部（美术稿位置）
+       - agent 头像 = 塔奇克马状态 GIF（docs/UI-draft/state/*.gif，五档动画）
+     约束：#36 词表 / #17 五档色（GIF 已含）/ #34 本机视角 / #29 正式消息 / #30 pending
      这是 throwaway：state 全在内存、数据是假的、启动 = 双击本文件。 -->
 <html lang="zh-CN">
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>PROTOTYPE · Tachikoma 外壳 · 茶话间 + agent（ticket #37）</title>
+<title>PROTOTYPE · Tachikoma 外壳 v3 · 茶话间 + agent（ticket #37）</title>
 <style>
   :root{
     /* —— Tachikoma 深色主题（自美术稿取色）—— */
@@ -23,7 +21,7 @@
     --fg:#e6edf3; --fg2:#8b949e; --fg3:#6e7681;
     --accent:#e94560; --accent-soft:rgba(233,69,96,.15);
     --ok:#3fb950; --warn:#d29922;
-    /* —— agent 五档（#17 契约，深色主题下的亮度微调）—— */
+    /* —— agent 五档（#17 契约）—— */
     --st-idle:#58a6ff; --st-easy:#3fb950; --st-busy:#d29922; --st-over:#f0883e; --st-blow:#f85149;
     --st-offline:#6e7681;
     /* —— 布局蓝图（自 804f1f634d5c9bd73bb7f196c9cedc48.png 测量，1536×1024）—— */
@@ -87,7 +85,7 @@
   .dm .nm{flex:1 1 auto; white-space:nowrap; overflow:hidden; text-overflow:ellipsis}
   .dm .tm{font-size:10.5px; color:var(--fg3); flex:0 0 auto}
 
-  /* Agent 行（塔奇克马精灵 + AI 徽章 + Active/Idle） */
+  /* Agent 行（塔奇克马状态 GIF + AI 徽章 + Active/Idle） */
   .agent{display:flex; align-items:center; gap:9px; padding:7px 10px; border-radius:7px; cursor:pointer; position:relative; color:var(--fg2)}
   .agent:hover{background:var(--panel); color:var(--fg)}
   .agent.on{background:var(--accent-soft); color:var(--accent)}
@@ -163,6 +161,12 @@
   .card .desc{font-size:12.5px; color:var(--fg2); line-height:1.6}
   .tags{display:flex; gap:6px; margin-top:9px; flex-wrap:wrap}
   .tags span{font-size:11px; color:var(--fg2); border:1px solid var(--line2); border-radius:999px; padding:2px 9px}
+
+  /* 派遣网络图（Active agents 卡片顶部，#17 星系图迷你版） */
+  .netmap{margin-bottom:10px; background:var(--panel2); border:1px solid var(--line); border-radius:9px; padding:8px}
+  .netmap svg{display:block; width:100%; height:auto}
+  .netmap .cap{font-size:10px; color:var(--fg3); margin-top:5px; display:flex; justify-content:space-between}
+
   .kv{display:flex; justify-content:space-between; gap:10px; padding:3px 0; font-size:12.5px}
   .kv .k{color:var(--fg2)} .kv .v{color:var(--fg); font-weight:600; text-align:right}
   .mrow{display:flex; align-items:center; gap:9px; padding:5px 0; font-size:13px}
@@ -172,7 +176,7 @@
   .mrow .nm{flex:1 1 auto; white-space:nowrap; overflow:hidden; text-overflow:ellipsis}
   .mrow .you{font-size:10.5px; color:var(--fg3)}
   .arow{display:flex; align-items:center; gap:9px; padding:6px 0; font-size:13px}
-  .arow img{width:26px; height:26px; object-fit:contain; image-rendering:pixelated; border-radius:6px; background:var(--panel2); padding:1px; flex:0 0 auto}
+  .arow img{width:30px; height:30px; object-fit:contain; image-rendering:pixelated; border-radius:7px; background:var(--panel2); padding:1px; flex:0 0 auto}
   .arow .nm{flex:1 1 auto; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; color:var(--fg)}
   .arow .st{font-size:10.5px; color:var(--fg2); display:flex; align-items:center; gap:5px; flex:0 0 auto}
   .arow .st i{width:7px; height:7px; border-radius:50%; background:var(--st-offline); font-style:normal}
@@ -181,16 +185,6 @@
   .prow .fi{width:26px; height:26px; border-radius:6px; display:flex; align-items:center; justify-content:center; font-weight:800; font-size:9px; color:#fff; flex:0 0 auto}
   .prow .nm{flex:1 1 auto; white-space:nowrap; overflow:hidden; text-overflow:ellipsis}
   .prow .sz{font-size:11px; color:var(--fg3); flex:0 0 auto}
-
-  /* 状态面板（右上角，prototype 元信息） */
-  .state{position:absolute; z-index:9; right:14px; top:14px; width:290px; max-height:calc(100% - 90px); overflow:auto;
-         background:rgba(13,17,23,.95); border:1px solid var(--line2); border-radius:11px; color:#c9d1d9; padding:11px 13px;
-         font-size:11.5px; line-height:1.6; box-shadow:0 12px 32px rgba(0,0,0,.6)}
-  .state h3{margin:0 0 5px; font-size:11px; color:var(--fg2); letter-spacing:.06em; text-transform:uppercase}
-  .state pre{margin:5px 0 0; background:#0b0f14; border:1px solid var(--line); border-radius:7px; padding:7px; font:10.5px/1.6 ui-monospace,SFMono-Regular,Menlo,monospace; white-space:pre-wrap; word-break:break-word}
-  .state .row{display:flex; justify-content:space-between; gap:8px; padding:2px 0}
-  .state .row b{color:#e6edf3; font-weight:600; text-align:right}
-  .state .close{position:absolute; right:8px; top:6px; cursor:pointer; color:var(--fg3); font-size:14px; border:0; background:transparent}
 
   /* 底部状态条（Tachikoma 的 HUMAN × AI × A BRIGHTER TOMORROW） */
   .statusbar{position:absolute; left:0; right:0; bottom:0; z-index:3; display:flex; justify-content:space-between; align-items:center;
@@ -202,12 +196,11 @@
 <body>
 
 <header class="bar">
-  <h1><span class="tag">PROTOTYPE</span>Tachikoma 外壳 · 茶话间 + agent · wayfinder ticket #37</h1>
+  <h1><span class="tag">PROTOTYPE</span>Tachikoma 外壳 v3 · 茶话间 + agent · wayfinder ticket #37</h1>
   <div class="sub">
-    像素级复刻自美术稿 <b>docs/UI-draft/804f1f634d5c9bd73bb7f196c9cedc48.png</b>（launch-plan 频道视图）；
-    结合 <b>6b2a777…</b>（DM 详情面板）与 <b>33cde72…</b>（Agent 网格）。
+    像素级复刻自美术稿 <b>docs/UI-draft/804f1f634d5c9bd73bb7f196c9cedc48.png</b>；
+    v3：移除 state 面板 · 派遣网络图移至 Active agents 卡片顶部 · agent 头像 = 塔奇克马状态 GIF（<b>docs/UI-draft/state/*.gif</b>）。
     业务行为 = map #20 已定 decisions（#36 词表 / #17 五档色 / #34 本机视角 / #29 正式消息 / #30 pending）。
-    右上角 <b>state</b> 面板实时显示内存态，可点 × 关闭。
   </div>
 </header>
 
@@ -251,23 +244,28 @@
 
     <!-- 右区：详情 -->
     <aside class="details" id="details"></aside>
-
-    <!-- state 面板 -->
-    <div class="state" id="statePanel">
-      <button class="close" id="stateClose">×</button>
-      <h3>state（内存 · 每次操作后重渲）</h3>
-      <div id="stateBody"></div>
-    </div>
   </div>
 </main>
 
 <script>
 /* =====================================================================
- * 假数据（内存态）——频道、成员、agent（塔奇克马精灵）、消息
+ * 塔奇克马状态 GIF（docs/UI-draft/state/*.gif，五档动画）
  * ===================================================================== */
+const TACHI_GIF = {
+  idle: 'state/sleep.gif',      // 空闲 = 睡觉
+  easy: 'state/ease.gif',       // 轻松
+  busy: 'state/tired.gif',      // 有点忙 = 疲倦
+  over: 'state/super_tired.gif',// 过载 = 超级疲倦
+  blow: 'state/ran_out.gif',    // 快炸了 = 没电
+  off:  'state/sleep.gif',      // 离线 = 睡觉（灰度处理由 CSS 滤镜）
+};
+const TACHI_PNG = {
+  red: 'tachikoma-assets/tachikoma-red.png',
+  blue: 'tachikoma-assets/tachikoma-blue.png',
+  white: 'tachikoma-assets/tachikoma-white.png',
+};
 const STATUS = ['idle','easy','busy','over','blow','off'];
 const SL = {idle:'空闲', easy:'轻松', busy:'有点忙', over:'过载', blow:'快炸了', off:'离线'};
-const TACHI = {red:'tachikoma-assets/tachikoma-red.png', blue:'tachikoma-assets/tachikoma-blue.png', white:'tachikoma-assets/tachikoma-white.png'};
 
 const CHANNELS = [
   {id:'c-gen',  nm:'general',    topic:'团队日常', unread:0},
@@ -281,9 +279,9 @@ const DMS = [
 ];
 
 const AGENTS = [
-  {id:'a-planner',  nm:'Planner',  role:'体素城市·主程',  tachi:'red',   status:'busy', pct:14, depth:1, pending:false},
+  {id:'a-planner',  nm:'Planner',   role:'体素城市·主程',   tachi:'red',   status:'busy', pct:14, depth:1, pending:false},
   {id:'a-research', nm:'Researcher', role:'涌现性 A/B 裁判', tachi:'blue',  status:'easy', pct:6,  depth:2, pending:false},
-  {id:'a-builder',  nm:'Builder',  role:'斗拱专项',        tachi:'white', status:'idle', pct:0,  depth:3, pending:true},
+  {id:'a-builder',  nm:'Builder',   role:'斗拱专项',         tachi:'white', status:'idle', pct:0,  depth:3, pending:true},
 ];
 
 const MSGS = [
@@ -298,7 +296,6 @@ const state = {
   chan: 'c-city',
   selected: null,
   msgs: [...MSGS],
-  showState: true,
   tick: 0,
 };
 
@@ -308,13 +305,17 @@ const state = {
 const rail = document.getElementById('rail');
 const details = document.getElementById('details');
 
-function stDot(st){ return `<span class="dot ${st==='off'?'off':st}"></span>`; }
+function tachiImg(a, cls='tachi', size=34){
+  const src = a.status==='off' ? TACHI_GIF.off : TACHI_GIF[a.status];
+  const gray = a.status==='off' ? 'filter:grayscale(1) opacity(.6);' : '';
+  return `<img class="${cls}" src="${src}" style="width:${size}px;height:${size}px;${gray}" alt="${a.nm}" title="${a.nm} · ${SL[a.status]}">`;
+}
 
 function renderRail(){
   const chan = CHANNELS.find(c=>c.id===state.chan);
   rail.innerHTML = `
     <div class="brand">
-      <img src="${TACHI.red}" alt="Tachikoma">
+      <img src="${TACHI_PNG.red}" alt="Tachikoma">
       <div>
         <div class="nm">Tachikoma</div>
         <div class="tag">茶话间 · More Together</div>
@@ -340,13 +341,13 @@ function renderRail(){
         <span class="nm">${d.nm}</span><span class="tm">${d.tm}</span>
       </div>`).join('')}
 
-      <div class="sect"><span>Agent 成员</span><span class="count" style="font-weight:500">${AGENTS.length}</span></div>
+      <div class="sect"><span>Agent 成员</span><span style="font-weight:500">${AGENTS.length}</span></div>
       ${AGENTS.map(a=>{
         const pill = a.pending ? `<span class="pill pending">pending</span>`
                    : (a.status==='idle' ? `<span class="pill idle">Idle</span>` : `<span class="pill active">Active</span>`);
         return `<div class="agent ${state.selected===a.id?'on':''}" data-agent="${a.id}">
           ${a.pending?'<span class="pend"></span>':''}
-          <img class="tachi" src="${TACHI[a.tachi]}" alt="${a.nm}">
+          ${tachiImg(a, 'tachi', 34)}
           <div class="meta">
             <div class="nm">${a.nm}<span class="badge-ai">AI</span></div>
             <div class="rl">${a.role} · ${SL[a.status]}${a.pct!=null?` · ${a.pct}%`:''} · 深度${a.depth}</div>
@@ -365,18 +366,17 @@ function whoMeta(id){
   const h = DMS.find(x=>x.id===id);
   if(h) return {...h, kind:'human', st:h.st==='on'?'easy':h.st};
   const a = AGENTS.find(x=>x.id===id);
-  return {...a, kind:'agent', st:a.status, hue:null};
+  return {...a, kind:'agent', st:a.status};
 }
 
 function renderMsgs(){
-  const who = id => whoMeta(id);
   document.getElementById('msgs').innerHTML = `
     <div class="day">Today</div>
     ${state.msgs.map(m=>{
-      const w = who(m.who);
+      const w = whoMeta(m.who);
       const fa = w.kind==='human'
-        ? `<div class="fa round" style="background:${w.hue}">${w.nm[0]}${stDot(w.st)}</div>`
-        : `<div class="fa"><img src="${TACHI[w.tachi]}" alt="${w.nm}">${stDot(w.st)}</div>`;
+        ? `<div class="fa round" style="background:${w.hue}">${w.nm[0]}<span class="dot ${w.st}"></span></div>`
+        : `<div class="fa">${tachiImg(w, '', 38)}</div>`;
       const ai = w.kind==='agent' ? `<span class="badge-ai">AI</span>` : '';
       return `<div class="msg">${fa}
         <div class="body">
@@ -386,6 +386,36 @@ function renderMsgs(){
       </div>`;
     }).join('')}`;
   const box = document.getElementById('msgs'); box.scrollTop = box.scrollHeight;
+}
+
+function miniNetmap(){
+  // 派遣网络图（#17 星系图迷你版，Active agents 卡片顶部）
+  const w = 280, h = 130;
+  const nodes = AGENTS.map((a,i)=>{
+    const angle = (i / AGENTS.length) * Math.PI * 2;
+    const r = 42;
+    const cx = w/2, cy = h/2;
+    const x = cx + Math.cos(angle) * r;
+    const y = cy + Math.sin(angle) * r * 0.7;
+    return {a, x, y};
+  });
+  const root = {x: w/2, y: h/2};
+  const edges = nodes.map(n =>
+    `<line x1="${root.x}" y1="${root.y}" x2="${n.x}" y2="${n.y}" stroke="#2a3a4f" stroke-width="1.2" ${n.a.status==='off'?'stroke-dasharray="3 3"':''}/>`
+  ).join('');
+  const nodeEls = nodes.map(n => `
+    <g style="cursor:pointer" data-agent="${n.a.id}">
+      <image href="${TACHI_PNG[n.a.tachi]}" x="${n.x-13}" y="${n.y-13}" width="26" height="26" style="image-rendering:pixelated; ${n.a.status==='off'?'filter:grayscale(1) opacity(.5);':''}"/>
+      <circle cx="${n.x+10}" cy="${n.y+10}" r="3.5" fill="${n.a.status==='off'?'#6e7681':({idle:'#58a6ff',easy:'#3fb950',busy:'#d29922',over:'#f0883e',blow:'#f85149'}[n.a.status])}"/>
+    </g>`).join('');
+  return `<div class="netmap">
+    <svg viewBox="0 0 ${w} ${h}">
+      ${edges}
+      <image href="${TACHI_PNG.red}" x="${root.x-16}" y="${root.y-16}" width="32" height="32" style="image-rendering:pixelated"/>
+      ${nodeEls}
+    </svg>
+    <div class="cap"><span>派遣网络图（#17 星系图 · 本机视角 #34）</span><span>峰值 31（#31）</span></div>
+  </div>`;
 }
 
 function renderDetails(){
@@ -410,8 +440,9 @@ function renderDetails(){
     </div>
     <div class="card">
       <h4>Active agents · ${AGENTS.filter(a=>a.status!=='off').length}<span class="lnk">See all →</span></h4>
+      ${miniNetmap()}
       ${AGENTS.map(a=>`<div class="arow">
-        <img src="${TACHI[a.tachi]}" alt="${a.nm}">
+        ${tachiImg(a, '', 30)}
         <span class="nm">${a.nm}</span>
         <span class="st"><i class="${a.status==='idle'?'idle':a.status==='off'?'off':'on'}"></i>${a.status==='idle'?'Idle':a.status==='off'?'Offline':'Online'}</span>
       </div>`).join('')}
@@ -425,18 +456,7 @@ function renderDetails(){
     </div>`;
 }
 
-function renderState(){
-  if(!state.showState){ document.getElementById('statePanel').style.display='none'; return; }
-  document.getElementById('statePanel').style.display='';
-  const lines = [
-    ['chan', state.chan], ['selected', state.selected ?? '—'], ['msgs', state.msgs.length], ['tick', state.tick],
-  ];
-  document.getElementById('stateBody').innerHTML = `
-    ${lines.map(([k,v])=>`<div class="row"><span>${k}</span><b>${v}</b></div>`).join('')}
-    <pre>${JSON.stringify({channels:CHANNELS.map(c=>({id:c.id,unread:c.unread})), agents:AGENTS.map(a=>({id:a.id,status:a.status,pct:a.pct,pending:a.pending}))}, null, 2)}</pre>`;
-}
-
-function renderAll(){ renderRail(); renderMsgs(); renderDetails(); renderState(); }
+function renderAll(){ renderRail(); renderMsgs(); renderDetails(); }
 
 /* =====================================================================
  * 交互
@@ -451,7 +471,6 @@ document.addEventListener('click', e=>{
     state.selected = ag.dataset.agent;
     const a = AGENTS.find(x=>x.id===state.selected);
     if(a && a.pending){
-      // #30：pending 收集期 → 主人确认键
       if(confirm(`「${a.nm}」处于 pending 收集期（#30）。\n是否确认开工？（取消 = 保持 pending）`)){
         a.pending = false; a.status = 'easy'; a.pct = 6;
       }
@@ -459,7 +478,6 @@ document.addEventListener('click', e=>{
     renderAll(); return;
   }
   if(e.target.closest('#sendBtn')){ doSend(); return; }
-  if(e.target.closest('#stateClose')){ state.showState = false; renderState(); return; }
 });
 document.getElementById('composerInput').addEventListener('keydown', e=>{ if(e.key==='Enter') doSend(); });
 function doSend(){
