@@ -1,9 +1,9 @@
 # 27: [UI] 主界面像素级复刻 UI-draft 三栏布局与五档状态点
 
 GitHub: （本地新建，无对应 GitHub 号）
-Labels: ready-for-agent
 
-Status: ready-for-agent
+Status: resolved
+Implementation: merged 12bc634
 
 ## Seam（唯一）
 
@@ -131,3 +131,7 @@ stage4 `tachikoma-shell` 已验证的布局常量（来自设计稿测量，直�
 - **验收口**：`pnpm run check:vendor` + `check:renderer-bundles` 读数 + `snapshot:dark` 与 `8a1abe5` 并排；偏差记本票评论。
 - 长程/契约向改动建议 fable 槽；短程样式接线可 opus（参见 `.agents/notes/hive-model-allocation.md`）。
 - 环境红线（实现者必读）：禁 `pnpm/npm install`；pnpm 只在仓库根；typecheck 用 vendor 内 `tsc`/`vue-tsc --noEmit --composite false`；vendor 改动只追加记账。
+
+## Comments
+
+- 2026-09-28 关票。A/B/C/D 已在 main：`7ab42eb` 左栏 276px + 右栏槽、`2f009c1` 群聊 185px 横幅、`7531146` ConvDetails 懒加载、`a4bd7c8` AvatarMark 五档点、`12bc634` 槽位 props。`a61f977` 结构探针：banner 185 / details 320 / rail+list 276 / burden-dot 已接线。Active agents 无 eligible 成员时整节隐藏；Pinned 无数据源，按 spec 省略。snapshot 基线 `83e3469`。
